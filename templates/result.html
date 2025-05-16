@@ -114,7 +114,7 @@
         <p><span class="result-label">คำแนะนำ:</span> {{ recommendation }}</p>
         <hr>
         <h3 style="color:#1976d2; margin-bottom:6px;">กรอกข้อมูลสำหรับติดต่อกลับ</h3>
-        <form method="POST">
+        <form method="POST" action="{{ url_for('contact') }}">
             <label for="name">ชื่อ:</label>
             <input type="text" name="name" id="name" placeholder="กรุณากรอกชื่อ" required>
             <label for="email">E-mail:</label>
