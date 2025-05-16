@@ -1,8 +1,16 @@
 import csv
 from datetime import datetime
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
+
+CSV_FILE = "survey_data.csv"
+FIELDNAMES = [
+    "timestamp", "smoking", "years_smoking", "secondhand_smoke", "pm25",
+    "chronic_cough", "shortness_of_breath", "wheezing",
+    "lung_disease_history", "family_cancer_history",
+    "total_score", "risk_level", "recommendation", "name", "email"
+]
 
 @app.route("/", methods=["GET", "POST"])
 def survey():
@@ -18,8 +26,11 @@ def survey():
             "wheezing": request.form.get("wheezing", ""),
             "lung_disease_history": request.form.get("lung_disease_history", ""),
             "family_cancer_history": request.form.get("family_cancer_history", ""),
-            "name": request.form.get("name", ""),
-            "email": request.form.get("email", "")
+            "total_score": 0,
+            "risk_level": "",
+            "recommendation": "",
+            "name": "",
+            "email": ""
         }
 
         total_score = sum(int(answers[key]) for key in [
@@ -27,6 +38,7 @@ def survey():
             "chronic_cough", "shortness_of_breath", "wheezing",
             "lung_disease_history", "family_cancer_history"
         ] if answers[key].isdigit())
+        answers["total_score"] = total_score
 
         if total_score <= 6:
             risk_level = "ความเสี่ยงต่ำ"
@@ -38,32 +50,53 @@ def survey():
             risk_level = "ความเสี่ยงสูง"
             recommendation = "ควรพบแพทย์เฉพาะทางโรคปอดทันที และตรวจ CT Chest Low dose"
 
-        answers["total_score"] = total_score
         answers["risk_level"] = risk_level
         answers["recommendation"] = recommendation
 
-        # บันทึกข้อมูลลงไฟล์ CSV
-        with open("survey_data.csv", mode="a", newline="", encoding="utf-8") as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=list(answers.keys()))
+        # บันทึกลง CSV (name/email ว่าง)
+        with open(CSV_FILE, mode="a", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=FIELDNAMES)
             if csvfile.tell() == 0:
                 writer.writeheader()
             writer.writerow(answers)
 
+        # ส่งข้อมูลไปหน้า result
         return render_template(
             "result.html",
             total_score=total_score,
-            answers=answers,
             risk_level=risk_level,
-            recommendation=recommendation,
-            contact_info={"name": answers["name"], "email": answers["email"]}
+            recommendation=recommendation
         )
 
-    return render_template("survey.html", total_score=None)
+    return render_template("survey.html")
 
-# --- Route สำหรับดาวน์โหลดไฟล์ CSV ---
+@app.route("/contact", methods=["POST"])
+def contact():
+    name = request.form.get("name", "")
+    email = request.form.get("email", "")
+
+    # อ่านข้อมูลทั้งหมด
+    rows = []
+    with open(CSV_FILE, mode="r", newline="", encoding="utf-8") as csvfile:
+        reader = list(csv.DictReader(csvfile))
+        rows = reader
+
+    # อัปเดตแถวล่าสุด
+    if rows:
+        rows[-1]["name"] = name
+        rows[-1]["email"] = email
+
+    # เขียนกลับลงไฟล์
+    with open(CSV_FILE, mode="w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=FIELDNAMES)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    return render_template("thankyou.html", name=name)
+
 @app.route("/download")
 def download():
-    return send_file("survey_data.csv", as_attachment=True)
+    return send_file(CSV_FILE, as_attachment=True)
 
 if __name__ == "__main__":
     app.run(debug=True)
