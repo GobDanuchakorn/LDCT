@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ผลการประเมินความเสี่ยงโรคปอด</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #f0f8ff;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+        .result-label {
+            font-weight: bold;
+        }
+        input[type="text"], input[type="email"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>ผลการประเมินความเสี่ยงโรคปอด</h1>
+
+        <h2>คะแนนรวมของคุณ: {{ total_score }}</h2>
+        <p><span class="result-label">ระดับความเสี่ยง:</span> {{ risk_level }}</p>
+        <p><span class="result-label">คำแนะนำ:</span> {{ recommendation }}</p>
+
+        <hr>
+
+        <!-- ฟอร์มกรอกข้อมูลการติดต่อกลับ -->
+        <h3>กรอกข้อมูลการติดต่อกลับ</h3>
+        <form method="POST">
+            <label for="name">ชื่อ:</label>
+            <input type="text" name="name" id="name" placeholder="กรุณากรอกชื่อ" required>
+
+            <label for="email">E-mail:</label>
+            <input type="email" name="email" id="email" placeholder="example@email.com" required>
+
+            <button type="submit">ส่งข้อมูลการติดต่อ</button>
+        </form>
+
+        <hr>
+
+        <a href="/">กลับไปทำแบบสอบถามใหม่</a>
+    </div>
+</body>
+</html>
