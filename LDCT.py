@@ -80,14 +80,14 @@ def survey():
 def contact():
     """
     Updates a specific entry in the CSV with contact information using a unique timestamp.
-    Returns a JSON response for the frontend to handle.
+    Redirects to a thank you page.
     """
     name = request.form.get("name")
     email = request.form.get("email")
     timestamp = request.form.get("timestamp")
 
     if not all([name, email, timestamp]):
-        return jsonify({'success': False, 'error': 'Missing required data'}), 400
+        return "Missing required data", 400
 
     try:
         rows = []
@@ -108,17 +108,18 @@ def contact():
                 writer = csv.DictWriter(csvfile, fieldnames=FIELDNAMES)
                 writer.writeheader()
                 writer.writerows(rows)
-            return jsonify({'success': True, 'name': name})
+            
+            # The key change: render the thankyou.html template upon success
+            return render_template("thankyou.html", name=name)
         else:
-            # This is the error you were seeing. It happens when the timestamp doesn't match any record.
-            return jsonify({'success': False, 'error': 'Record not found'}), 404
+            return "Record not found. Could not save contact information.", 404
             
     except FileNotFoundError:
-        return jsonify({'success': False, 'error': 'Data file not found on server.'}), 500
+        return "Data file not found on server.", 500
     except Exception as e:
         # Log the error for debugging
         print(f"An error occurred: {e}")
-        return jsonify({'success': False, 'error': 'An internal server error occurred.'}), 500
+        return "An internal server error occurred.", 500
 
 @app.route("/download")
 def download():
