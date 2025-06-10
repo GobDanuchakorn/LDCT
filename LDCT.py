@@ -78,48 +78,27 @@ def survey():
 
 @app.route("/contact", methods=["POST"])
 def contact():
-    """
-    Updates a specific entry in the CSV with contact information using a unique timestamp.
-    Redirects to a thank you page.
-    """
-    name = request.form.get("name")
-    email = request.form.get("email")
-    timestamp = request.form.get("timestamp")
+    name = request.form.get("name", "")
+    email = request.form.get("email", "")
 
-    if not all([name, email, timestamp]):
-        return "Missing required data", 400
+    # อ่านข้อมูลทั้งหมด
+    rows = []
+    with open(CSV_FILE, mode="r", newline="", encoding="utf-8") as csvfile:
+        reader = list(csv.DictReader(csvfile))
+        rows = reader
 
-    try:
-        rows = []
-        record_found = False
-        with open(CSV_FILE, mode='r', newline='', encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                # Find the matching record by its unique timestamp
-                if row.get('timestamp') == timestamp:
-                    row['name'] = name
-                    row['email'] = email
-                    record_found = True
-                rows.append(row)
+    # อัปเดตแถวล่าสุด
+    if rows:
+        rows[-1]["name"] = name
+        rows[-1]["email"] = email
 
-        if record_found:
-            # Write the entire updated dataset back to the file
-            with open(CSV_FILE, mode='w', newline='', encoding='utf-8') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=FIELDNAMES)
-                writer.writeheader()
-                writer.writerows(rows)
-            
-            # The key change: render the thankyou.html template upon success
-            return render_template("thankyou.html", name=name)
-        else:
-            return "Record not found. Could not save contact information.", 404
-            
-    except FileNotFoundError:
-        return "Data file not found on server.", 500
-    except Exception as e:
-        # Log the error for debugging
-        print(f"An error occurred: {e}")
-        return "An internal server error occurred.", 500
+    # เขียนกลับลงไฟล์
+    with open(CSV_FILE, mode="w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=FIELDNAMES)
+        writer.writeheader()
+        writer.writerows(rows)
+
+    return render_template("thankyou.html", name=name)
 
 @app.route("/download")
 def download():
