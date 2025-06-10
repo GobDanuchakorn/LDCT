@@ -95,7 +95,7 @@ def contact():
 
     return render_template("thankyou.html", name=name)
 
-@app.route("/downloads")
+@app.route("/download")
 def download():
     return send_file(CSV_FILE, as_attachment=True)
 
