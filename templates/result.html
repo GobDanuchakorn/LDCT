@@ -33,14 +33,6 @@
         .contact-form label { display: block; text-align: left; color: #555; margin-bottom: 5px; }
         .contact-form input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1.5px solid #ddd; border-radius: 7px; font-size: 1rem; }
         .contact-form input:focus { border-color: #1976d2; outline: none; }
-        /* Modal Styles */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s; z-index: 2000; }
-        .modal-overlay.visible { opacity: 1; visibility: visible; }
-        .modal-content { background: #fff; padding: 40px; border-radius: 16px; text-align: center; max-width: 400px; width: 90%; transform: scale(0.9); transition: transform 0.3s; }
-        .modal-overlay.visible .modal-content { transform: scale(1); }
-        .modal-content h2 { color: #2e7d32; margin: 0 0 10px 0; }
-        .modal-content p { color: #555; font-size: 1.1rem; margin-bottom: 25px;}
-        .modal-content .close-button { background: #1976d2; color: white; padding: 12px 25px; border-radius: 8px; text-decoration: none; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -55,8 +47,8 @@
         <hr>
         <div class="contact-form">
             <h3>กรอกข้อมูลสำหรับติดต่อกลับ</h3>
-            <form id="contactForm" method="POST" action="{{ url_for('contact') }}">
-                <!-- Hidden input to store the unique timestamp -->
+            <form method="POST" action="{{ url_for('contact') }}">
+                <!-- Hidden input to store the unique timestamp for matching the record -->
                 <input type="hidden" name="timestamp" value="{{ timestamp }}">
                 <label for="name">ชื่อ:</label>
                 <input type="text" name="name" id="name" placeholder="กรุณากรอกชื่อ" required>
@@ -69,15 +61,6 @@
         </div>
     </div>
 
-    <!-- Thank You Modal -->
-    <div class="modal-overlay" id="thankyou-modal">
-        <div class="modal-content">
-            <h2>ส่งข้อมูลเรียบร้อย!</h2>
-            <p>ขอบคุณ <strong id="modal-name"></strong> สำหรับข้อมูล</p>
-            <button class="close-button" id="close-modal-button">ปิด</button>
-        </div>
-    </div>
-
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const score = parseInt('{{ total_score }}', 10);
@@ -85,52 +68,13 @@
             const cardEl = document.getElementById('result-card');
             const scoreNumberEl = document.getElementById('total-score');
             const gaugeFill = document.getElementById('gauge-fill');
-            const contactForm = document.getElementById('contactForm');
-            const thankYouModal = document.getElementById('thankyou-modal');
-            const closeModalButton = document.getElementById('close-modal-button');
-            const modalName = document.getElementById('modal-name');
 
             const MAX_SCORE = 18;
             const CIRCUMFERENCE = 2 * Math.PI * 42;
 
-            function setGauge(val) { /* ... same as before ... */ setTimeout(() => { gaugeFill.style.strokeDashoffset = CIRCUMFERENCE - (Math.max(0, Math.min(100, (val/MAX_SCORE)*100))/100)*CIRCUMFERENCE; }, 300); gaugeFill.style.strokeDasharray = CIRCUMFERENCE; gaugeFill.style.strokeDashoffset = CIRCUMFERENCE;}
-            function animateScore(target) { /* ... same as before ... */ let current = 0; const inc = Math.ceil(target/50)||1; const i = setInterval(() => {current+=inc; if(current>=target){current=target;clearInterval(i);} scoreNumberEl.textContent = current;}, 25);}
-            function launchConfetti() { /* ... same as before ... */ const c=['#1976d2','#64b5f6','#2196f3','#e3f2fd'];for(let i=0;i<100;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.animationDelay=Math.random()*2+'s';d.style.backgroundColor=c[Math.floor(Math.random()*c.length)];d.style.transform=`rotate(${Math.random()*360}deg)`;document.body.appendChild(d);}}
-
-            // Handle Contact Form Submission with JavaScript
-            contactForm.addEventListener('submit', function(event) {
-                event.preventDefault(); // Prevent normal form submission
-                
-                const formData = new FormData(contactForm);
-                const submitButton = contactForm.querySelector('button');
-                submitButton.textContent = 'กำลังส่ง...';
-                submitButton.disabled = true;
-
-                fetch("{{ url_for('contact') }}", {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        modalName.textContent = data.name;
-                        thankYouModal.classList.add('visible');
-                        submitButton.textContent = 'ส่งข้อมูลแล้ว';
-                    } else {
-                        alert('เกิดข้อผิดพลาด: ' + data.error);
-                        submitButton.textContent = 'ส่งข้อมูลการติดต่อ';
-                        submitButton.disabled = false;
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
-                    submitButton.textContent = 'ส่งข้อมูลการติดต่อ';
-                    submitButton.disabled = false;
-                });
-            });
-
-            closeModalButton.addEventListener('click', () => thankYouModal.classList.remove('visible'));
+            function setGauge(val) { setTimeout(() => { gaugeFill.style.strokeDashoffset = CIRCUMFERENCE - (Math.max(0, Math.min(100, (val/MAX_SCORE)*100))/100)*CIRCUMFERENCE; }, 300); gaugeFill.style.strokeDasharray = CIRCUMFERENCE; gaugeFill.style.strokeDashoffset = CIRCUMFERENCE;}
+            function animateScore(target) { let current = 0; const inc = Math.ceil(target/50)||1; const i = setInterval(() => {current+=inc; if(current>=target){current=target;clearInterval(i);} scoreNumberEl.textContent = current;}, 25);}
+            function launchConfetti() { const c=['#1976d2','#64b5f6','#2196f3','#e3f2fd'];for(let i=0;i<100;i++){const d=document.createElement('div');d.className='confetti';d.style.left=Math.random()*100+'vw';d.style.animationDelay=Math.random()*2+'s';d.style.backgroundColor=c[Math.floor(Math.random()*c.length)];d.style.transform=`rotate(${Math.random()*360}deg)`;document.body.appendChild(d);}}
 
             // Initial setup
             if (!isNaN(score)) {
